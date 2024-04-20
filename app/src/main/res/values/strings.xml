@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">GdsHackathon</string>
+    <string name="welcoming_title_tv">Приветствуем\nвас в Астане!</string>
+    <string name="description_text_tv">Наш цифровой помощник создан\nс любовью, чтобы стать вашим\nпроводником в мир незабываемых\nвпечатлений.</string>
+    <string name="card_1_text">Куда\nсходить?</string>
+    <string name="card_2_text">Проходящие\nмероприятия</string>
+    <string name="card_3_text">Интересные\nфакты</string>
+    <string name="hint_enter_prompt">Ваш запрос</string>
+    <string name="button_find_text">Найти</string>
 </resources>

@@ -4,11 +4,15 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- App Colors -->
-    <color name="primary">#6750A4</color>
-    <color name="secondary">#958DA5</color>
+    <color name="primary">#246488</color>
+    <color name="secondary">#4F606E</color>
+    <color name="on_secondary">#FFFFFF</color>
     <color name="tertiary">#B58392</color>
     <color name="error">#E46962</color>
     <color name="neutral">#938F96</color>
+    <color name="background">#F6F9FE</color>
+    <color name="on_background">#181C20</color>
+
 
 
 </resources>
