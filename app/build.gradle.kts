@@ -1,11 +1,19 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
     namespace = "com.vasilyev.gdshackathon"
     compileSdk = 34
+
+    buildTypes {
+        release {
+            val apiKey = properties["MAPS_API_KEY"].toString()
+            buildConfigField("String", "API_KEY", apiKey)
+        }
+    }
 
     defaultConfig {
         applicationId = "com.vasilyev.gdshackathon"
@@ -26,12 +34,19 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+
+    buildFeatures{
+        viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -48,6 +63,9 @@ dependencies {
     implementation (libs.androidx.lifecycle.extensions)
     implementation (libs.androidx.lifecycle.viewmodel.ktx)
     implementation (libs.androidx.fragment.ktx)
+
+    //Kotlin Result API for Retrofit
+    implementation (libs.retrofit.adapters.result)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
