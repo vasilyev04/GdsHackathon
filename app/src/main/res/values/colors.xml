@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- App Colors -->
+    <color name="primary">#6750A4</color>
+    <color name="secondary">#958DA5</color>
+    <color name="tertiary">#B58392</color>
+    <color name="error">#E46962</color>
+    <color name="neutral">#938F96</color>
+
+
 </resources>
