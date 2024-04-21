@@ -1,5 +1,7 @@
 package com.vasilyev.gdshackathon.presentation.main
 
-sealed class MainState {
+import com.vasilyev.gdshackathon.domain.entity.Place
 
+sealed class MainState {
+    class PlacesReceived(list: List<Place>): MainState()
 }

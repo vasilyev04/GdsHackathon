@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -51,6 +52,19 @@ android {
 }
 
 dependencies {
+    //Location Service
+    implementation(libs.play.services.location)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    annotationProcessor(libs.androidx.room.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.room.compiler)
+
+    //Gemini Api
+    implementation(libs.generativeai)
 
     //Google Map
     implementation (libs.google.play.services.maps)
