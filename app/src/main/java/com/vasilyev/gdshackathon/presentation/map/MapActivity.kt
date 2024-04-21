@@ -1,6 +1,7 @@
 package com.vasilyev.gdshackathon.presentation.map
 
 import android.Manifest
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
@@ -72,6 +73,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         _binding = ActivityMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        showLoading()
+
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         parseIntent()
@@ -87,6 +90,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         binding.fabWalk.setOnClickListener {
             val startLoc = "${userLocation.latitude} ${userLocation.longitude}"
             viewModel.getRoute(startLoc, place, mode = "walking")
+        }
+        
+        binding.fabBus.setOnClickListener { 
+            val alertDialog = AlertDialog.Builder(this)
+            alertDialog.setTitle("Маршруты")
+            alertDialog.setMessage(place.busses)
+            alertDialog.setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+
+            alertDialog.create().show()
         }
     }
     private fun observeLocation(){
@@ -116,6 +131,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         )
     }
 
+    var endMarker: Marker? = null
+    private fun updateEndMarker(lat: Double, lng: Double){
+        val point = LatLng(lat, lng)
+
+        endMarker?.remove()
+
+        endMarker = googleMap.addMarker(
+            MarkerOptions()
+                .position(point)
+        )
+    }
+
+
     private fun observeState(){
         viewModel.mapState.observe(this){ state ->
             when(state){
@@ -134,6 +162,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
+
+        viewModel.endLocation.observe(this){
+            updateEndMarker(it.latitude, it.longitude)
+        }
     }
 
     private var polyline: Polyline? = null
@@ -144,6 +176,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     private fun createPolyLine(route: List<LatLng>): PolylineOptions {
         val polyOptions = PolylineOptions()
+        polyOptions.color(getColor(R.color.error)) // color of the route
 
         for(point in route){
             polyOptions.add(point)
@@ -203,10 +236,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun showLoading() {
+        binding.progressBar.isActivated = true
         binding.progressBar.visibility = View.VISIBLE
     }
 
     private fun hideLoading() {
+        binding.progressBar.isActivated = false
         binding.progressBar.visibility = View.GONE
     }
 

@@ -8,6 +8,17 @@
     android:background="#D8FFFFFF"
     tools:context=".presentation.main.MainActivity">
 
+    <ProgressBar
+        android:visibility="gone"
+        android:translationZ="1dp"
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_places"
         android:layout_width="match_parent"
@@ -76,8 +87,7 @@
         app:cardCornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-       >
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -110,9 +120,7 @@
                 android:src="@drawable/icon_send_msg"
                 android:layout_weight="1"
                 android:layout_marginEnd="10dp"
-                android:backgroundTint="@android:color/transparent"  />
-
-
+                android:backgroundTint="@android:color/transparent"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
