@@ -11,6 +11,7 @@ interface MapService {
     suspend fun getDirections(
         @Query("origin") origin: String,
         @Query("destination") destination: String,
+        @Query("mode") mode: String,
         @Query("key") apiKey: String = API_KEY
     ): Result<RouteDto>
 
