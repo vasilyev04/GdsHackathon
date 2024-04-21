@@ -17,6 +17,8 @@ class MapViewModel(
     private val _mapState = MutableLiveData<MapState>()
     val mapState: LiveData<MapState> get() = _mapState
 
+    val endLocation = MutableLiveData<LatLng>()
+
     private val placeRepository = PlaceRepositoryImpl(application)
     private val mapRepository = MapRepositoryImpl()
 
@@ -27,11 +29,13 @@ class MapViewModel(
         }
     }
 
-    fun getRoute(location: String, place: Place){
+    fun getRoute(location: String, place: Place, mode: String){
+        _mapState.value = MapState.Loading
         viewModelScope.launch {
-            val route = mapRepository.getRoute(location, place.address)
+            val route = mapRepository.getRoute(location, place.address, mode)
 
             route.onSuccess {
+                endLocation.value = LatLng(it.endLocation.lat, it.endLocation.lng)
                 _mapState.postValue(MapState.Route(decodePoly(it.route)))
             }
         }

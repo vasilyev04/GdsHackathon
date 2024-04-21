@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:backgroundTint="@color/user_msg"
-    app:cardCornerRadius="5dp">
+    android:layout_margin="5dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
+    <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Example"
-        android:padding="5dp"/>
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:backgroundTint="@color/user_msg"
+        app:cardCornerRadius="5dp">
 
-</androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Example"
+            android:padding="5dp"/>
+
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>

@@ -12,6 +12,10 @@
     <color name="neutral">#938F96</color>
     <color name="background">#F6F9FE</color>
     <color name="on_background">#181C20</color>
+    <color name="primary_container">#C8E6FF</color>
+
+    <color name="ai_msg">#63597C</color>
+    <color name="user_msg">#C8E6FF</color>
 
 
 

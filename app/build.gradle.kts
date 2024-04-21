@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.devtools.ksp")
+    id ("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 android {
@@ -56,6 +58,10 @@ android {
 }
 
 dependencies {
+    //Glide
+    implementation (libs.glide.v4120)
+    annotationProcessor(libs.compiler)
+
     //Location Service
     implementation(libs.play.services.location)
 

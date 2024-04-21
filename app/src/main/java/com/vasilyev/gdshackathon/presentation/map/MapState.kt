@@ -4,7 +4,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.vasilyev.gdshackathon.domain.entity.Place
 
 sealed class MapState {
-    class RequestedPlace(place: Place): MapState()
+    class RequestedPlace(val place: Place): MapState()
 
-    class Route(route: List<LatLng>): MapState()
+    class Route(val route: List<LatLng>): MapState()
+
+    object Loading : MapState()
 }

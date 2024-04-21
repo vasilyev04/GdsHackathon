@@ -22,9 +22,11 @@
         <activity
             android:name=".presentation.map.MapActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.GdsHackathon" />
         <activity
             android:name=".presentation.main.MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
