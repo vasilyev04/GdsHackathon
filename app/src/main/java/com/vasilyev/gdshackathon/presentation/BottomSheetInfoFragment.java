@@ -15,9 +15,21 @@ import androidx.fragment.app.DialogFragment;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.vasilyev.gdshackathon.R;
 import com.vasilyev.gdshackathon.databinding.BottomSheetInfoBinding;
+import com.vasilyev.gdshackathon.domain.entity.Place;
 
 public class BottomSheetInfoFragment extends BottomSheetDialogFragment {
      private BottomSheetInfoBinding binding;
+
+
+     private void initView(Place place) {
+
+          binding.titleNameTv.setText(place.getName());
+          binding.addressTv.setText(place.getAddress());
+          binding.scheduleTv.setText(place.getWorkSchedule());
+          binding.descriptionTv.setText(place.getDescription());
+          binding.contactsContactTv.setText(place.getContacts());
+
+     }
 
      public BottomSheetInfoFragment() {
      }
@@ -25,6 +37,11 @@ public class BottomSheetInfoFragment extends BottomSheetDialogFragment {
      @Override
      public void onCreate(@Nullable Bundle savedInstanceState) {
           super.onCreate(savedInstanceState);
+
+
+
+
+
           setStyle(DialogFragment.STYLE_NORMAL, R.style.CustomBottomSheetStyle);
      }
 
