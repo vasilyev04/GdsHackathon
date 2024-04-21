@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -97,11 +98,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.sendMsgBtn.setOnClickListener {
             hideWelcomeText()
+
             val text = binding.supportSentRequestEt.text.toString().trim()
             if(text.isNotBlank()){
                 val location = "\nUSER_LOCATION: ${userLocation.latitude} ${userLocation.longitude}"
-                adapter.addMessage(Message("user", text + location))
-                viewModel.generatePrompt(text)
+                adapter.addMessage(Message("user", text))
+                viewModel.generatePrompt(text + location)
                 binding.supportSentRequestEt.setText("")
                 hideKeyboard(this)
                 binding.rvChat.scrollToPosition(adapter.itemCount - 1)
