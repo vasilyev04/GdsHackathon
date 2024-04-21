@@ -1,25 +1,34 @@
 package com.vasilyev.gdshackathon.presentation.map
 
+import android.Manifest
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
 import com.vasilyev.gdshackathon.R
 import com.vasilyev.gdshackathon.databinding.ActivityMapBinding
 import com.vasilyev.gdshackathon.domain.entity.Place
-import com.vasilyev.gdshackathon.presentation.LocationService
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private var _binding: ActivityMapBinding? = null
@@ -27,6 +36,28 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val viewModel: MapViewModel by viewModels{
         MapViewModelFactory(application)
+    }
+    private var userMarker: Marker? = null
+
+    private lateinit var locationManager: LocationManager
+    private lateinit var userLocation: Location
+
+    private var isRouteShowed = false
+
+    private val gpsLocationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            userLocation = location
+            updateStartMarker(location.latitude, location.longitude)
+            val startLoc = "${location.latitude} ${location.longitude}"
+            if(!isRouteShowed){
+                viewModel.getRoute(startLoc, place)
+                isRouteShowed = true
+            }
+        }
+
+        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 
     private lateinit var googleMap: GoogleMap
@@ -37,8 +68,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         _binding = ActivityMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
         parseIntent()
         initMap()
+        observeLocation()
+        viewModel.getPlaceById(1)
+        observeState()
+    }
+    private fun observeLocation(){
+        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){}
+
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000, 0F, gpsLocationListener)
     }
 
     private fun parseIntent(){
@@ -46,6 +88,83 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         val placeId = intent.getIntExtra(EXTRA_PLACE_ID, 0)
         viewModel.getPlaceById(placeId)
+    }
+
+    private fun updateStartMarker(lat: Double, lng: Double){
+        val point = LatLng(lat, lng)
+
+        userMarker?.remove()
+
+        userMarker = googleMap.addMarker(
+            MarkerOptions()
+                .position(point)
+                .icon(getStartMarkerIcon())
+                .anchor(MARKER_ANCHOR_VALUE, MARKER_ANCHOR_VALUE)
+        )
+    }
+
+    private fun setEndMarker(lat: Double, lng: Double){
+        val point = LatLng(lat, lng)
+
+        userMarker = googleMap.addMarker(
+            MarkerOptions()
+                .position(point)
+        )
+    }
+
+    private fun observeState(){
+        viewModel.mapState.observe(this){ state ->
+            when(state){
+                is MapState.Route -> {
+                    hideLoading()
+                    displayRoute(state.route)
+                    createCameraBounds(state.route)
+                }
+
+                is MapState.RequestedPlace -> {
+                    place = state.place
+                }
+
+                is MapState.Loading -> {
+                    showLoading()
+                }
+            }
+        }
+    }
+
+    private fun displayRoute(route: List<LatLng>){
+        val options = createPolyLine(route)
+        googleMap.addPolyline(options)
+    }
+    private fun createPolyLine(route: List<LatLng>): PolylineOptions {
+        val polyOptions = PolylineOptions()
+        polyOptions.color(R.color.primary) // color of the route
+
+        for(point in route){
+            polyOptions.add(point)
+        }
+
+        return polyOptions
+    }
+
+    private fun createCameraBounds(route: List<LatLng>){
+        val boundsBuilder = LatLngBounds.builder()
+
+        for (point in route) {
+            boundsBuilder.include(point)
+        }
+
+        val routeBounds = boundsBuilder.build()
+
+        val cameraUpdate = CameraUpdateFactory.newLatLngBounds(routeBounds, CAMERA_PADDING)
+        googleMap.animateCamera(cameraUpdate)
+    }
+
+    private fun getStartMarkerIcon(): BitmapDescriptor {
+        val bitmapMarker = ContextCompat.getDrawable(this, R.drawable.user_marker)
+            ?.toBitmap() ?: throw java.lang.RuntimeException("Unknown resource id")
+
+        return BitmapDescriptorFactory.fromBitmap(bitmapMarker)
     }
 
     override fun onDestroy() {
@@ -76,6 +195,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             .build()
 
         googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+    }
+
+    private fun showLoading() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
     }
 
     companion object{
