@@ -1,6 +1,11 @@
 package com.vasilyev.gdshackathon.presentation.main
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -9,11 +14,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.vasilyev.gdshackathon.R
 import com.vasilyev.gdshackathon.data.repository.AiRepositoryImpl
 import com.vasilyev.gdshackathon.data.repository.MapRepositoryImpl
 import com.vasilyev.gdshackathon.data.repository.PlaceRepositoryImpl
 import com.vasilyev.gdshackathon.databinding.ActivityMainBinding
+import com.vasilyev.gdshackathon.presentation.LocationService
 import com.vasilyev.gdshackathon.presentation.map.MapActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +29,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+
     private var _binding: ActivityMainBinding? = null
     private val binding: ActivityMainBinding
         get() = requireNotNull(_binding)
@@ -43,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         if(isGranted){
             showChat()
+            observeLocation()
         }else{
             Toast.makeText(this, "Вы не предоставили разрешения", Toast.LENGTH_SHORT).show()
         }
@@ -157,13 +168,33 @@ class MainActivity : AppCompatActivity() {
            Log.d("GeminiTestTag", ans)
        }
 
-        //startActivity(MapActivity.newIntent(this, 1))
+    }
 
+    private fun observeLocation(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "location",
+                "Location",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+//        Intent(applicationContext, LocationService::class.java).apply {
+//            action = LocationService.ACTION_START
+//            startService(this)
+//        }
+
+
+        startActivity(MapActivity.newIntent(this, 1))
     }
 
     companion object{
         private val REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.POST_NOTIFICATIONS
         )
     }
 }
