@@ -1,35 +1,48 @@
 package com.vasilyev.gdshackathon.presentation.main
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.R
+import android.app.ProgressDialog
 import android.content.Context
-import android.content.Intent
-import android.os.Build
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.vasilyev.gdshackathon.R
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.vasilyev.gdshackathon.data.repository.AiRepositoryImpl
-import com.vasilyev.gdshackathon.data.repository.MapRepositoryImpl
-import com.vasilyev.gdshackathon.data.repository.PlaceRepositoryImpl
 import com.vasilyev.gdshackathon.databinding.ActivityMainBinding
-import com.vasilyev.gdshackathon.presentation.LocationService
+import com.vasilyev.gdshackathon.domain.entity.Message
+import com.vasilyev.gdshackathon.presentation.BottomSheetInfoFragment
+import com.vasilyev.gdshackathon.presentation.main.adapter.PlacesRecyclerViewAdapter
+import com.vasilyev.gdshackathon.presentation.main.adapter.RecyclerViewAdapter
 import com.vasilyev.gdshackathon.presentation.map.MapActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
 class MainActivity : AppCompatActivity() {
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationManager: LocationManager
+    private lateinit var userLocation: Location
+
+    private val gpsLocationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            userLocation = location
+        }
+
+        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
+    }
+
+    private val adapter = RecyclerViewAdapter()
+    private val placeAdapter = PlacesRecyclerViewAdapter()
 
 
     private var _binding: ActivityMainBinding? = null
@@ -53,9 +66,7 @@ class MainActivity : AppCompatActivity() {
 
         if(isGranted){
             showChat()
-            observeLocation()
-        }else{
-            Toast.makeText(this, "Вы не предоставили разрешения", Toast.LENGTH_SHORT).show()
+            observeState()
         }
     }
 
@@ -65,6 +76,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         requestPermissions()
+        binding.rvPlaces.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvPlaces.adapter = placeAdapter
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        placeAdapter.onItemClick = {
+            val bottomSheetInfoFragment = BottomSheetInfoFragment().apply {
+                val bundle = Bundle().apply {
+                    putInt("EXTRA_PLACE", it)
+                }
+                arguments = bundle
+            }
+            bottomSheetInfoFragment.show(supportFragmentManager, "Bottom Sheet Info Fragment")
+        }
     }
 
 
@@ -72,7 +96,31 @@ class MainActivity : AppCompatActivity() {
         requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
     }
 
+    private fun observeState(){
+        viewModel.mainState.observe(this){state ->
+            when(state){
+                is MainState.Places -> {
+                    placeAdapter.submitList(state.list)
+                }
+
+                is MainState.AiAnswer -> {
+                    adapter.addMessage(Message("ai", state.answer))
+                }
+
+                is MainState.PlaceReceived -> {
+
+                }
+            }
+        }
+    }
+
     private fun showChat(){
+        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){}
+
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000, 0F, gpsLocationListener)
+
+
         val startPrompt = "1.Океанариум «Ailand»:\n" +
                 "Адрес: Астана, Коргалжинское шоссе, 2\n" +
                 "Автобусы: № 12 , 18 , 21 , 27 , 28 , 35 , 42 , 43 , 44\n" +
@@ -161,40 +209,21 @@ class MainActivity : AppCompatActivity() {
                 "{5,6,9,10}" +
                 "\n\n У тебя есть следующие ограничения: ты не должен допускать оффтопа в диалоге с пользователем, то есть если он задает вопрос не связанный с местами в городе Астана, то ты должен ответить пользователю что ты обучен отвечать только не тему достопримечательностей города Астаны"
 
-       lifecycleScope.launch {
-           AiRepositoryImpl.generateContent(startPrompt)
-
-           val ans = AiRepositoryImpl.generateContent("Я хочу повеселиться, что посоветуешь?")
-           Log.d("GeminiTestTag", ans)
-       }
-
     }
 
-    private fun observeLocation(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "location",
-                "Location",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
 
-//        Intent(applicationContext, LocationService::class.java).apply {
-//            action = LocationService.ACTION_START
-//            startService(this)
-//        }
-
-
-        startActivity(MapActivity.newIntent(this, 1))
+    private fun hideWelcomeText(){
+        binding.llWelcome.visibility = View.GONE
+        binding.rvChat.visibility = View.VISIBLE
+        binding.rvChat.adapter = adapter
     }
+
+
 
     companion object{
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.POST_NOTIFICATIONS
         )
     }
 }

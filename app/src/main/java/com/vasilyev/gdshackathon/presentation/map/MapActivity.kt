@@ -9,6 +9,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.vasilyev.gdshackathon.R
 import com.vasilyev.gdshackathon.databinding.ActivityMapBinding
@@ -49,8 +51,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             userLocation = location
             updateStartMarker(location.latitude, location.longitude)
             val startLoc = "${location.latitude} ${location.longitude}"
+
+            Log.d("TestTest", "$startLoc $place")
             if(!isRouteShowed){
-                viewModel.getRoute(startLoc, place)
+                viewModel.getRoute(startLoc, place, mode = "driving")
                 isRouteShowed = true
             }
         }
@@ -73,8 +77,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         parseIntent()
         initMap()
         observeLocation()
-        viewModel.getPlaceById(1)
         observeState()
+
+        binding.fabCar.setOnClickListener {
+            val startLoc = "${userLocation.latitude} ${userLocation.longitude}"
+            viewModel.getRoute(startLoc, place, mode = "driving")
+        }
+
+        binding.fabWalk.setOnClickListener {
+            val startLoc = "${userLocation.latitude} ${userLocation.longitude}"
+            viewModel.getRoute(startLoc, place, mode = "walking")
+        }
     }
     private fun observeLocation(){
         if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -103,15 +116,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         )
     }
 
-    private fun setEndMarker(lat: Double, lng: Double){
-        val point = LatLng(lat, lng)
-
-        userMarker = googleMap.addMarker(
-            MarkerOptions()
-                .position(point)
-        )
-    }
-
     private fun observeState(){
         viewModel.mapState.observe(this){ state ->
             when(state){
@@ -132,13 +136,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private var polyline: Polyline? = null
     private fun displayRoute(route: List<LatLng>){
         val options = createPolyLine(route)
-        googleMap.addPolyline(options)
+        polyline?.remove()
+        polyline = googleMap.addPolyline(options)
     }
     private fun createPolyLine(route: List<LatLng>): PolylineOptions {
         val polyOptions = PolylineOptions()
-        polyOptions.color(R.color.primary) // color of the route
 
         for(point in route){
             polyOptions.add(point)

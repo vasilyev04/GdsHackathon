@@ -10,8 +10,8 @@ class MapRepositoryImpl: MapRepository {
     private val mapApi = RetrofitInstance.mapApi
     private val routeMapper = RouteMapper()
 
-    override suspend fun getRoute(startLocation: String, endLocation: String): Result<Route> {
-        val result = mapApi.getDirections(startLocation, endLocation)
+    override suspend fun getRoute(startLocation: String, endLocation: String, mode: String): Result<Route> {
+        val result = mapApi.getDirections(startLocation, endLocation, mode)
 
         if(result.isSuccess){
             val response = result.getOrNull()
